@@ -164,7 +164,8 @@ def download_report(url,report,con):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
   local_filename = put_files+timecode+'-'+report+'.'+con
   open(local_filename, 'wb').write(r.content)
-  print('Interweb monkeys are downloading and putting together the pieces of your report.')
+  print('Downloading and putting together the pieces of your report.')
+  print('Report Name: '+report)
 
 def parse_json(url,scan):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
@@ -200,6 +201,8 @@ for line in get_files:
     line = line.strip()
     params = line.split(",")
     r_name = params[0].replace(' ','-')
+    r_name = params[0].replace('\','-')
+    r_name = params[0].replace('/','-')
     r_name = r_name.lower()
     scan = params[1]
     file = params[2]

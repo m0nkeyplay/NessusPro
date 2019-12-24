@@ -49,7 +49,7 @@ hello = '#######################################################################
 hello +='#                                                                        #\n'
 hello +='#                          Nessus Professional                           #\n'
 hello +='#                      Vulnerability Scan Download                       #\n'
-hello +='#                                  v.01                                  #\n'
+hello +='#                                  v.02                                  #\n'
 hello +='#                                                                 |      #\n'
 hello +='#                                                                /|\ ~es #\n'
 hello +='##########################################################################\n'
@@ -125,7 +125,8 @@ def scan_history(url,s_name,scan_id):
   if len(history_list) != 0:
     latest_history = max(history_list)
     for h in data["history"]:
-      if  h["status"] == 'completed':
+      # Thanks to https://github.com/A-Kod we get the lastest, not the first
+      if  h["status"] == 'completed' and h["history_id"] == latest_history:
         h_id = str(h["history_id"])
         s_start = file_date(h["creation_date"])
         s_end = file_date(h["last_modification_date"])
@@ -164,7 +165,8 @@ def download_report(url,report,con):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
   local_filename = put_files+timecode+'-'+report+'.'+con
   open(local_filename, 'wb').write(r.content)
-  print('Interweb monkeys are downloading and putting together the pieces of your report.')
+  print('Downloading and putting together the pieces of your report.')
+  print('Report Name: '+report)
 
 def parse_json(url,scan):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
@@ -199,8 +201,7 @@ get_files = open(cwd+'/'+workingFile, 'r')
 for line in get_files:
     line = line.strip()
     params = line.split(",")
-    r_name = params[0].replace(' ','-')
-    r_name = r_name.lower()
+    r_name = params[0].replace(' ','-').replace('\\','-').replace('\/','-').lower()
     scan = params[1]
     file = params[2]
     ftype = params[3]

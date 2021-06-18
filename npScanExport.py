@@ -3,13 +3,15 @@
 #
 # 	author:  	https://github.com/m0nkeyplay/
 # 	file Date: 	2019-10-15
+#   Update:     2021-06-17
+#               Added HTML and chapters option
 #
 # 	purpose: 	Queue Up and download scan data from the lastest scan based on scan name
 #
 #	structure: 	Get the latest history and queue up the nessus file
 
 #
-#   usage:      python3 npScanExport.py -scan ScanNametoSearch -o nessus|csv
+#   usage:      python3 npScanExport.py -scan ScanNametoSearch -o nessus|csv|html
 #
 #   switchs:    -s       Search this specific scan
 #               -o       Output Type options:  nessus, csv
@@ -35,7 +37,7 @@ urllib3.disable_warnings()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-s", "--scan", required=True, help="Scan Name: whole or partial")
-ap.add_argument("-o", "--output", required=True, help="Output Type:  csv or nessus")
+ap.add_argument("-o", "--output", required=True, help="Output Type:  csv,nessus,html")
 args = vars(ap.parse_args())
 
 # I don't think we need this - but every time I remove it I find out I needed it
@@ -70,7 +72,7 @@ switchs:
 
 #       Variables
 
-outputTypes = ['csv','nessus']
+outputTypes = ['csv','nessus','html']
 timecode = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 cwd = os.getcwd()
 workingFile = timecode+'.txt'
@@ -113,7 +115,13 @@ headers['content-type']= 'application/json'
 headers['x-apikeys']= h_key_data
 
 #	report filter info
-report_data = '{"filter.search_type":"or","format":"'+stype+'"}'
+if stype == 'html':
+  # added thanks to @AshDee
+  # Can change to different chapter type here
+  # vuln_hosts_summary, vuln_by_host, compliance_exec, remediations, vuln_by_plugin, compliance
+  report_data = '{"filter.search_type":"or","format":"'+stype+'","chapters":"vuln_hosts_summary"}'
+else:
+  report_data = '{"filter.search_type":"or","format":"'+stype+'"}'
 
 #   Set up the scans to queue based on the search criteria
 def scan_history(url,s_name,scan_id):

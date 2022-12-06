@@ -128,31 +128,34 @@ def scan_history(url,s_name,scan_id):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
   data = r.json()
   history_list = []
-  for d in data["history"]:
-    history_list.append(int(d['history_id']))
-  if len(history_list) != 0:
-    latest_history = max(history_list)
-    for h in data["history"]:
-      # Thanks to https://github.com/A-Kod we get the lastest, not the first
-      if  h["status"] == 'completed' and h["history_id"] == latest_history:
-        h_id = str(h["history_id"])
-        s_start = file_date(h["creation_date"])
-        s_end = file_date(h["last_modification_date"])
-        s_status = h["status"]
-        post_url = url+'/export?history_id='+h_id
-        p = requests.post(post_url, proxies=proxies, headers=headers, data=report_data, verify=False)
-        if p.status_code == 200:
-            file_data = p.json()
-            report_file = str(file_data["file"])
-            pickUp_file.write(s_name+','+scan_id+','+report_file+','+stype+'\n')
-            break
-        else:
-            print('Something went wrong with the request for '+post_url)
-            print(p.status_code)
-            break
-
-  else:
-    print('...')
+  try:
+    data["history"] is not None
+    for d in data["history"]:
+      history_list.append(int(d['history_id']))
+    if len(history_list) != 0:
+      latest_history = max(history_list)
+      for h in data["history"]:
+        # Thanks to https://github.com/A-Kod we get the lastest, not the first
+        if  h["status"] == 'completed' and h["history_id"] == latest_history:
+          h_id = str(h["history_id"])
+          s_start = file_date(h["creation_date"])
+          s_end = file_date(h["last_modification_date"])
+          s_status = h["status"]
+          post_url = url+'/export?history_id='+h_id
+          p = requests.post(post_url, proxies=proxies, headers=headers, data=report_data, verify=False)
+          if p.status_code == 200:
+              file_data = p.json()
+              report_file = str(file_data["file"])
+              pickUp_file.write(s_name+','+scan_id+','+report_file+','+stype+'\n')
+              break
+          else:
+              print('Something went wrong with the request for '+post_url)
+              print(p.status_code)
+              break
+    else:
+      print('...')
+    except:
+      print("We can't find any history. Here is the raw data received to look through\n%s")%str(data)
 
 # 	Status Check
 def status_check(scan,file):

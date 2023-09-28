@@ -5,12 +5,12 @@ scripts to use against the Nessus Professional API
 
 **This script will pull down all vulnerability data from a scan in csv or nessus format based on a scan name**
 
-*usage* `python3 npScanExport.py -s ScanNametoSearch -o nessus|csv`
+*usage* `python3 npScanExport.py -s ScanNametoSearch -o nessus|csv|html|pdf`
 
 ******switchs:******    
 
                -s       Search this specific scan : If using widows and space is in the name, use double quotes
-               -o       Output Type options:  nessus, csv
+               -o       Output Type options:  nessus, csv, html, pdf
  
 ******notes:******      fill in the following variables as needed per environment
 

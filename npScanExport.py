@@ -62,17 +62,17 @@ Once those are set you should be on your way.'''
 
 intermission ='Requests sent.\nNo errors received.\nExport of results is queued up.\nInitiating download...'
 
-usage = '''\n usage% python3 npScsanExport.py'- ScanNametoSearch -o nessus|csv
+usage = '''\n usage% python3 npScsanExport.py'- ScanNametoSearch -o nessus|csv|html|pdf
 switchs:
             -s          Search this specific scan *see below 
-            -o          Output Type options:  nessus, csv
+            -o          Output Type options:  nessus, csv, html, pdf
             *anything with a space needs to be quoted - double quotes if running on Windows'''
 
 
 
 #       Variables
 
-outputTypes = ['csv','nessus','html']
+outputTypes = ['csv','nessus','html','pdf']
 timecode = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 cwd = os.getcwd()
 workingFile = timecode+'.txt'
@@ -115,7 +115,7 @@ headers['content-type']= 'application/json'
 headers['x-apikeys']= h_key_data
 
 #	report filter info
-if stype == 'html':
+if stype == 'html' or stype == 'pdf':
   # added thanks to @AshDee
   # Can change to different chapter type here
   # vuln_hosts_summary, vuln_by_host, compliance_exec, remediations, vuln_by_plugin, compliance
@@ -154,8 +154,8 @@ def scan_history(url,s_name,scan_id):
               break
     else:
       print('...')
-    except:
-      print("We can't find any history. Here is the raw data received to look through\n%s")%str(data)
+  except:
+    print("We can't find any history. Here is the raw data received to look through\n%s")%str(data)
 
 # 	Status Check
 def status_check(scan,file):

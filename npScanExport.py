@@ -92,14 +92,9 @@ put_files = args['folder'] if args['folder'] else cwd
 pickUp_file = open(os.path.join(cwd, workingFile), 'w')
 
 # Environment check
-try:
-    ak
-    sk
-    put_files
-    npURL
-except:
-    print(holdOnCowboy)
-    exit()
+if not ak or not sk or not npURL:
+  print(holdOnCowboy)
+  exit()
 
 sscan = args['scan'].strip()
 stype = args['output'].strip().lower()

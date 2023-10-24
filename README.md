@@ -16,7 +16,7 @@ scripts to use against the Nessus Professional API
  
 ******notes:******      fill in the following variables as needed per environment
 
-               npURLdefault    <-- Base URL for the Nessus Professional instance no trailing /
+               npURLdefault    <-- Base URL for the Nessus Professional instance no trailing
                ak              <-- Access Key
                sk              <-- Secret Key
                proxies         <-- If you use a proxy, set it here.

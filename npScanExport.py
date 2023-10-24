@@ -14,12 +14,12 @@
 #   usage:      python3 npScanExport.py -scan ScanNametoSearch -o nessus|csv|html
 #
 #   switchs:    -s       Search this specific scan
-#               -o       Output Type options:  nessus, csv
+#               -o       Output Type options:  nessus, csv, pdf, html
+#               -f       Folder to output the nessus files
+#               -n       Nessus full URL (Protocol + IP|Domain + Port)
 #
 #   notes:      fill in the following variables as needed per environment
-#               npURL           <-- Base URL for the Nessus Professional instance no trailing /
-#               put_files       <-- Where do you want the exports to download
-#                                   default is inside the downloads folder attached to this repo
+#               npURLdefault    <-- Nessus full URL (Protocol + IP|Domain + Port)
 #               ak              <-- Access Key
 #               sk              <-- Secret Key
 #               proxies         <-- If you use a proxy, set it here.
@@ -38,6 +38,8 @@ urllib3.disable_warnings()
 ap = argparse.ArgumentParser()
 ap.add_argument("-s", "--scan", required=True, help="Scan Name: whole or partial")
 ap.add_argument("-o", "--output", required=True, help="Output Type:  csv,nessus,html")
+ap.add_argument("-f", "--folder", required=False, help="Output Folder")
+ap.add_argument("-n", "--nessusurl", required=False, help="Full Nessus URL")
 args = vars(ap.parse_args())
 
 # I don't think we need this - but every time I remove it I find out I needed it
@@ -66,24 +68,28 @@ usage = '''\n usage% python3 npScsanExport.py'- ScanNametoSearch -o nessus|csv|h
 switchs:
             -s          Search this specific scan *see below 
             -o          Output Type options:  nessus, csv, html, pdf
+            -f          Output Folder
+            -n          Nessus Full URL
             *anything with a space needs to be quoted - double quotes if running on Windows'''
 
 
 
 #       Variables
-
 outputTypes = ['csv','nessus','html','pdf']
 timecode = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 cwd = os.getcwd()
 workingFile = timecode+'.txt'
-#   These need to be uncommented and completed before first run
-#npURL = '' # Base URL and port if using one -- no trailing /
-#put_files = cwd+'/downloads/' # Change or keep
-#ak = '' # Fill me in
-#sk = ''# Fill me in
+
+## These needs to be filled in
+npURLdefault = ''   # Fill me in
+ak = ''             # Fill me in
+sk = ''             # Fill me in
+
+npURL = args['nessusurl'].rstrip('/') if args['nessusurl'] else npURLdefault
+put_files = args['folder'] if args['folder'] else cwd
 
 # Leave this one alone Please
-pickUp_file = open(cwd+'/'+workingFile, 'w')
+pickUp_file = open(os.path.join(cwd, workingFile), 'w')
 
 # Environment check
 try:
@@ -127,20 +133,14 @@ else:
 def scan_history(url,s_name,scan_id):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
   data = r.json()
-  history_list = []
   try:
-    data["history"] is not None
-    for d in data["history"]:
-      history_list.append(int(d['history_id']))
-    if len(history_list) != 0:
-      latest_history = max(history_list)
-      for h in data["history"]:
-        # Thanks to https://github.com/A-Kod we get the lastest, not the first
-        if  h["status"] == 'completed' and h["history_id"] == latest_history:
+    if data["history"]:
+      # If the latest scan did not completed (run by mistake and stopped or failed for some reason) it won't download it
+      # simple solution would be to invert the history so it starts from the most recent and checks wether it was succesfull
+      rev_scan_history = data["history"][::-1]
+      for h in rev_scan_history:
+        if  h["status"] == 'completed':
           h_id = str(h["history_id"])
-          s_start = file_date(h["creation_date"])
-          s_end = file_date(h["last_modification_date"])
-          s_status = h["status"]
           post_url = url+'/export?history_id='+h_id
           p = requests.post(post_url, proxies=proxies, headers=headers, data=report_data, verify=False)
           if p.status_code == 200:
@@ -152,10 +152,10 @@ def scan_history(url,s_name,scan_id):
               print('Something went wrong with the request for '+post_url)
               print(p.status_code)
               break
-    else:
-      print('...')
+      else:
+        print('...')
   except:
-    print("We can't find any history. Here is the raw data received to look through\n%s")%str(data)
+    print(f"We can't find any history. Here is the raw data received to look through\n{data}")
 
 # 	Status Check
 def status_check(scan,file):
@@ -174,7 +174,7 @@ def status_check(scan,file):
 #	Download the files
 def download_report(url,report,con):
   r = requests.get(url, proxies=proxies, headers=headers, verify=False)
-  local_filename = put_files+timecode+'-'+report+'.'+con
+  local_filename = os.path.join(put_files, f'{timecode}-{report}.{con}')
   open(local_filename, 'wb').write(r.content)
   print('Downloading and putting together the pieces of your report.')
   print('Report Name: '+report)
@@ -207,7 +207,7 @@ time.sleep(5)
 # end queying up the data for export
 # begin downloading it
 
-get_files = open(cwd+'/'+workingFile, 'r')
+get_files = open(os.path.join(cwd, workingFile), 'r')
 
 for line in get_files:
     line = line.strip()
@@ -230,4 +230,4 @@ for line in get_files:
 print('Files are downloaded and pieced together. Pick them up in '+put_files)
 # Clean Up
 get_files.close()
-os.remove(cwd+'/'+workingFile)
+os.remove(os.path.join(cwd, workingFile))

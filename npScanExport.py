@@ -19,6 +19,7 @@
 #               -n       Nessus full URL (Protocol + IP|Domain + Port)
 #
 #   notes:      fill in the following variables as needed per environment
+#               npURLdefault    <-- Nessus full URL (Protocol + IP|Domain + Port)
 #               ak              <-- Access Key
 #               sk              <-- Secret Key
 #               proxies         <-- If you use a proxy, set it here.
@@ -38,7 +39,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-s", "--scan", required=True, help="Scan Name: whole or partial")
 ap.add_argument("-o", "--output", required=True, help="Output Type:  csv,nessus,html")
 ap.add_argument("-f", "--folder", required=False, help="Output Folder")
-ap.add_argument("-n", "--nessusurl", required=True, help="Full Nessus URL")
+ap.add_argument("-n", "--nessusurl", required=False, help="Full Nessus URL")
 args = vars(ap.parse_args())
 
 # I don't think we need this - but every time I remove it I find out I needed it
@@ -79,12 +80,13 @@ timecode = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 cwd = os.getcwd()
 workingFile = timecode+'.txt'
 
-npURL = args['nessusurl'].rstrip('/')
-put_files = args['folder'] if args['folder'] else cwd
-
 ## These needs to be filled in
-ak = '' # Fill me in
-sk = '' # Fill me in
+npURLdefault = ''   # Fill me in
+ak = ''             # Fill me in
+sk = ''             # Fill me in
+
+npURL = args['nessusurl'].rstrip('/') if args['nessusurl'] else npURLdefault
+put_files = args['folder'] if args['folder'] else cwd
 
 # Leave this one alone Please
 pickUp_file = open(os.path.join(cwd, workingFile), 'w')
@@ -133,6 +135,8 @@ def scan_history(url,s_name,scan_id):
   data = r.json()
   try:
     if data["history"]:
+      # If the latest scan did not completed (run by mistake and stopped or failed for some reason) it won't download it
+      # simple solution would be to invert the history so it starts from the most recent and checks wether it was succesfull
       rev_scan_history = data["history"][::-1]
       for h in rev_scan_history:
         if  h["status"] == 'completed':

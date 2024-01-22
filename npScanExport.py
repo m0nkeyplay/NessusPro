@@ -40,7 +40,10 @@ ap.add_argument("-s", "--scan", required=True, help="Scan Name: whole or partial
 ap.add_argument("-o", "--output", required=True, help="Output Type:  csv,nessus,html")
 ap.add_argument("-f", "--folder", required=False, help="Output Folder")
 ap.add_argument("-n", "--nessusurl", required=False, help="Full Nessus URL")
+ap.add_argument("-t", "--type", metavar="REPORT_TYPE", required=False, choices=['vuln_hosts_summary','vuln_by_host','compliance_exec','remediations','vuln_by_plugin','compliance'], help="Type of report to generate.  Options are: vuln_hosts_summary, vuln_by_host, compliance_exec, remediations, vuln_by_plugin, compliance.  Defaults to vuln_hosts_summary")
 args = vars(ap.parse_args())
+
+
 
 # I don't think we need this - but every time I remove it I find out I needed it
 def file_date(udate):
@@ -80,10 +83,11 @@ timecode = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 cwd = os.getcwd()
 workingFile = timecode+'.txt'
 
-## These needs to be filled in
-npURLdefault = ''   # Fill me in
-ak = ''             # Fill me in
-sk = ''             # Fill me in
+# These are grabbed from the shell environment.
+# Undefined vars are empty-string, and they will cause a failure below
+npURLdefault = os.getenv('npURLdefault')
+ak = os.getenv('ak')
+sk = os.getenv('sk')
 
 npURL = args['nessusurl'].rstrip('/') if args['nessusurl'] else npURLdefault
 put_files = args['folder'] if args['folder'] else cwd
@@ -103,7 +107,12 @@ if stype not in outputTypes:
     for x in outputTypes:
         print('        -o'+x)
         exit()
-    
+
+reportType = "vuln_hosts_summary"
+if args['type']:
+    reportType = args['type']
+
+
 h_key_data = 'accessKey='+ak+'; secretKey='+sk
 check_url = npURL+'/scans'
 
@@ -120,7 +129,7 @@ if stype == 'html' or stype == 'pdf':
   # added thanks to @AshDee
   # Can change to different chapter type here
   # vuln_hosts_summary, vuln_by_host, compliance_exec, remediations, vuln_by_plugin, compliance
-  report_data = '{"filter.search_type":"or","format":"'+stype+'","chapters":"vuln_hosts_summary"}'
+  report_data = '{"filter.search_type":"or","format":"'+stype+'","chapters":"'+reportType+'"}'
 else:
   report_data = '{"filter.search_type":"or","format":"'+stype+'"}'
 

@@ -13,10 +13,13 @@ scripts to use against the Nessus Professional API
                -o       Output Type options:  nessus, csv, html, pdf
                -f       Folder to output the nessus files (Optional)
                -n       Nessus full URL (Protocol + IP|Domain + Port) (Optional if hardcoded - check next note)
+               -t       Type for Report Type
  
-******notes:******      fill in the following variables as needed per environment
+******notes:******      These are grabbed from user environment
 
                npURLdefault    <-- Base URL for the Nessus Professional instance no trailing
                ak              <-- Access Key
                sk              <-- Secret Key
+
+               This should be placed in the file itself, or fix the file to add it as user environment
                proxies         <-- If you use a proxy, set it here.
